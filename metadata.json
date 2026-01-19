@@ -1,0 +1,7 @@
+{
+  "name": "Abhishek's Outbound Lead Gen Assistant",
+  "description": "An intelligent tool to automate finding Indian companies with strong potential for international expansion. It performs deep-dive analysis, identifies decision-makers, scores leads, and composes personalized outreach emails.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
