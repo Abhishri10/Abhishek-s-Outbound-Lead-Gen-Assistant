@@ -1,3 +1,4 @@
+
 import { SearchFormData } from './types';
 
 export const CLIENT_CATEGORIES = [
@@ -8,7 +9,7 @@ export const CLIENT_CATEGORIES = [
 
 export const TARGET_DEPARTMENTS = [
   "Marketing", "Sales", "International Marketing", "Business Development", 
-  "Executive", "Product", "Operations", "CEO", "COO", "Business Head", "Owner"
+  "Executive", "Operations", "CEO", "COO", "Business Head", "Owner"
 ];
 
 export const TARGET_INTERNATIONAL_REGIONS = ["USA", "Canada", "UK/Europe", "Africa", "MENA", "APAC"];
@@ -46,7 +47,10 @@ export const DEFAULT_FORM_DATA: SearchFormData = {
   targetDepartments: initialTargetDepartments,
   searchWeb: true,
   searchLinkedIn: true,
-  searchSocialMedia: false,
+  searchReddit: false,
+  searchFacebook: false,
+  searchX: false,
+  searchInstagram: false,
   generateEmail: true,
   targetRegion: 'INDIA', // Origin country of leads
   targetRegions: initialTargetRegions,

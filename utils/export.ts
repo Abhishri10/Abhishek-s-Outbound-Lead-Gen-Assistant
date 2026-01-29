@@ -1,3 +1,4 @@
+
 import { Lead } from '../types';
 
 const flattenLead = (lead: Lead) => {
@@ -10,19 +11,10 @@ const flattenLead = (lead: Lead) => {
     phone: lead.phone,
     justification: lead.justification,
     outreachSuggestion: lead.outreachSuggestion,
-    employeeCount: lead.employeeCount,
     latestFunding: lead.latestFunding,
-    techStack: lead.techStack.join(', '),
     competitors: lead.competitors.join(', '),
     platformPresence: (lead.platformPresence || []).join(', '),
   };
-
-  if (lead.outreachSequence) {
-    lead.outreachSequence.forEach((step, i) => {
-      flattened[`Outreach_Step_${i + 1}_Subject`] = step.subject;
-      flattened[`Outreach_Step_${i + 1}_Body`] = step.body;
-    });
-  }
 
   lead.contacts.slice(0, 5).forEach((c, i) => {
     flattened[`contact${i + 1}Name`] = c.contactName;
@@ -41,32 +33,14 @@ const escapeCSV = (value: any): string => {
   return str;
 };
 
-const getHeaders = (flatLeads: { [key: string]: any }[]): string[] => {
-  const headerSet = new Set<string>();
-  flatLeads.forEach(lead => {
-    Object.keys(lead).forEach(key => headerSet.add(key));
-  });
-
-  const orderedCore = [
-    'companyName', 'category', 'leadScore', 'companyLinkedIn', 'email', 'phone', 'justification',
-    'outreachSuggestion', 'employeeCount', 'latestFunding', 'techStack', 'competitors', 'platformPresence'
-  ];
-
-  const outreachHeaders = Array.from(headerSet).filter(h => h.startsWith('Outreach')).sort();
-  const contactHeaders = Array.from(headerSet).filter(h => h.startsWith('contact')).sort();
-
-  return [...orderedCore, ...outreachHeaders, ...contactHeaders];
-};
-
-
 export const exportToCSV = (leads: Lead[]) => {
   if (leads.length === 0) return;
   const flatLeads = leads.map(flattenLead);
-  const headers = getHeaders(flatLeads);
+  const headers = Object.keys(flatLeads[0]);
 
   const csvContent = [
     headers.map(escapeCSV).join(','),
-    ...flatLeads.map(row => headers.map(header => escapeCSV(row[header as keyof typeof row])).join(',')),
+    ...flatLeads.map(row => headers.map(header => escapeCSV(row[header])).join(',')),
   ].join('\n');
 
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -81,62 +55,33 @@ export const exportToCSV = (leads: Lead[]) => {
 export const copyToClipboard = (leads: Lead[]) => {
   if (leads.length === 0) return;
   const flatLeads = leads.map(flattenLead);
-  const headers = getHeaders(flatLeads);
+  const headers = Object.keys(flatLeads[0]);
   const tsvContent = [
     headers.join('\t'),
-    ...flatLeads.map(row => headers.map(header => String(row[header as keyof typeof row] ?? '').replace(/\n/g, ' ')).join('\t')),
+    ...flatLeads.map(row => headers.map(header => String(row[header] ?? '').replace(/\n/g, ' ')).join('\t')),
   ].join('\n');
-  navigator.clipboard.writeText(tsvContent).then(() => {
-    alert('Leads copied to clipboard!');
-  }, () => {
-    alert('Failed to copy leads.');
-  });
+  navigator.clipboard.writeText(tsvContent);
 };
 
 export const exportToXLSX = (leads: Lead[]) => {
     if (leads.length === 0) return;
-
-    const createSheetXML = (sheetName: string, headers: string[], data: Record<string, any>[]) => {
-        const headerRow = `<Row>${headers.map(h => `<Cell><Data ss:Type="String">${h}</Data></Cell>`).join('')}</Row>`;
-        
-        const dataRows = data.map(row => 
-            `<Row>${headers.map(h => {
-                const val = row[h];
-                const type = typeof val === 'number' ? 'Number' : 'String';
-                const cleanVal = String(val ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                return `<Cell><Data ss:Type="${type}">${cleanVal}</Data></Cell>`;
-            }).join('')}</Row>`
-        ).join('');
-
-        return `
-          <Worksheet ss:Name="${sheetName}">
-            <Table>
-              ${headerRow}
-              ${dataRows}
-            </Table>
-          </Worksheet>
-        `;
-    };
-
     const flatLeads = leads.map(flattenLead);
-    const leadHeaders = getHeaders(flatLeads);
-    const leadsSheetXML = createSheetXML("Leads", leadHeaders, flatLeads);
+    const headers = Object.keys(flatLeads[0]);
     
-    const newsData = leads.map(lead => ({
-        companyName: lead.companyName,
-        latestNewsUrl: lead.latestNews.url,
-        latestInternationalNewsUrl: lead.latestInternationalNews.url,
-    }));
-    const newsHeaders = ['companyName', 'latestNewsUrl', 'latestInternationalNewsUrl'];
-    const newsSheetXML = createSheetXML("News URLs", newsHeaders, newsData);
+    const rowContent = flatLeads.map(row => 
+        `<Row>${headers.map(h => `<Cell><Data ss:Type="String">${String(row[h]).replace(/&/g, '&amp;')}</Data></Cell>`).join('')}</Row>`
+    ).join('');
 
     const template = `
         <?xml version="1.0"?>
         <?mso-application progid="Excel.Sheet"?>
-        <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
-          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-          ${leadsSheetXML}
-          ${newsSheetXML}
+        <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+          <Worksheet ss:Name="Leads">
+            <Table>
+              <Row>${headers.map(h => `<Cell><Data ss:Type="String">${h}</Data></Cell>`).join('')}</Row>
+              ${rowContent}
+            </Table>
+          </Worksheet>
         </Workbook>
     `;
 

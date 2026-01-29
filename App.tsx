@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { SearchFormData, Lead, Contact } from './types';
 import { DEFAULT_FORM_DATA } from './constants';
 import SearchForm from './components/SearchForm';
 import ResultsTable from './components/ResultsTable';
 import MarketExplorer from './components/MarketExplorer';
-import { generateLeadsPrompt, generateCompetitorAnalysis, generateTalkingPoints } from './services/geminiService';
+import { generateLeadsPrompt, generateCompetitorAnalysis, generateTalkingPoints, verifyLeadDetails } from './services/geminiService';
 import { exportToCSV, exportToXLSX, copyToClipboard } from './utils/export';
 import { DocumentTextIcon } from './components/icons/DocumentTextIcon';
 import { BrainCircuitIcon } from './components/icons/BrainCircuitIcon';
@@ -46,6 +47,33 @@ const App: React.FC = () => {
   
   const handleClearLeads = useCallback(() => {
     setLeads([]);
+  }, []);
+
+  const handleVerifyLeads = useCallback(async (leadsToVerify: Lead[]) => {
+    setLeads(prev => prev.map(lead => {
+      if (leadsToVerify.some(lv => lv.companyName === lead.companyName)) {
+        return { ...lead, verificationStatus: 'verifying' };
+      }
+      return lead;
+    }));
+
+    for (const lead of leadsToVerify) {
+      try {
+        const update = await verifyLeadDetails(lead);
+        setLeads(prev => prev.map(l => 
+          l.companyName === lead.companyName 
+            ? { ...l, ...update } 
+            : l
+        ));
+      } catch (err) {
+        console.error(`Verification failed for ${lead.companyName}:`, err);
+        setLeads(prev => prev.map(l => 
+          l.companyName === lead.companyName 
+            ? { ...l, verificationStatus: 'failed' } 
+            : l
+        ));
+      }
+    }
   }, []);
 
   const findLookalikes = useCallback(async (lead: Lead) => {
@@ -112,59 +140,45 @@ const App: React.FC = () => {
   }, []);
 
   const header = (
-    <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-      <h1 className="text-3xl font-bold text-slate-800">Abhishek's Outbound Lead Gen Assistant</h1>
-      <p className="text-slate-600 mt-2">
-        An intelligent tool to automate finding Indian companies with strong potential for international expansion.
-      </p>
+    <div className="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm border-b border-slate-200 px-6 py-4 mb-8">
+      <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center">
+        <div>
+            <h1 className="text-2xl font-black text-slate-800 tracking-tight">Abhishek's Outbound Engine <span className="text-indigo-600">PRO</span></h1>
+            <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Automated International Expansion Intelligence</p>
+        </div>
+        
+        <nav className="flex space-x-2 mt-4 md:mt-0 bg-slate-100 p-1.5 rounded-2xl">
+            <button
+                onClick={() => setActiveTab('leads')}
+                className={`flex items-center space-x-3 px-8 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${
+                    activeTab === 'leads' ? 'bg-white shadow-md text-indigo-600' : 'text-slate-500 hover:text-slate-800'
+                }`}
+            >
+                <DocumentTextIcon className="w-5 h-5" />
+                <span>Lead Intelligence</span>
+            </button>
+            <button
+                onClick={() => setActiveTab('market')}
+                className={`flex items-center space-x-3 px-8 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${
+                    activeTab === 'market' ? 'bg-white shadow-md text-indigo-600' : 'text-slate-500 hover:text-slate-800'
+                }`}
+            >
+                <BrainCircuitIcon className="w-5 h-5" />
+                <span>Market Explorer</span>
+            </button>
+        </nav>
+      </div>
     </div>
   );
 
-  const TabButton: React.FC<{
-      label: string;
-      isActive: boolean;
-      onClick: () => void;
-      icon: React.ReactNode;
-  }> = ({ label, isActive, onClick, icon }) => (
-      <button
-          onClick={onClick}
-          className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-t-lg focus:outline-none transition-colors ${
-              isActive
-                  ? 'border-b-2 border-indigo-500 text-indigo-600'
-                  : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50'
-          }`}
-          aria-current={isActive ? 'page' : undefined}
-      >
-          {icon}
-          <span>{label}</span>
-      </button>
-  );
-
   return (
-    <div className="min-h-screen bg-slate-100 font-sans">
-      <main className="container mx-auto p-4 md:p-8">
-        {header}
+    <div className="min-h-screen bg-slate-50 font-sans pb-20">
+      {header}
 
-        <div className="mb-6 border-b border-slate-200">
-            <nav className="flex space-x-2">
-                <TabButton 
-                    label="Lead Generation"
-                    isActive={activeTab === 'leads'}
-                    onClick={() => setActiveTab('leads')}
-                    icon={<DocumentTextIcon />}
-                />
-                <TabButton 
-                    label="Market Explorer"
-                    isActive={activeTab === 'market'}
-                    onClick={() => setActiveTab('market')}
-                    icon={<BrainCircuitIcon />}
-                />
-            </nav>
-        </div>
-
+      <main className="max-w-[1600px] mx-auto px-6">
         {activeTab === 'leads' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-4">
+          <div className="flex flex-col space-y-10">
+            <div className="w-full">
               <SearchForm
                 formData={formData}
                 setFormData={setFormData}
@@ -174,11 +188,12 @@ const App: React.FC = () => {
                 hasLeads={leads.length > 0}
               />
             </div>
-            <div className="lg:col-span-8">
+            
+            <div className="w-full">
               {error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                  <strong className="font-bold">Error: </strong>
-                  <span className="block sm:inline">{error}</span>
+                <div className="bg-red-50 border border-red-200 text-red-700 px-8 py-5 rounded-2xl shadow-sm mb-8 flex items-center" role="alert">
+                  <span className="text-2xl mr-4">⚠️</span>
+                  <span className="font-bold text-base">{error}</span>
                 </div>
               )}
               <ResultsTable
@@ -190,13 +205,13 @@ const App: React.FC = () => {
                 copyToClipboard={() => copyToClipboard(leads)}
                 generateCompetitorAnalysis={handleGenerateCompetitorAnalysis}
                 generateTalkingPoints={handleGenerateTalkingPoints}
+                onVerifyLeads={handleVerifyLeads}
               />
             </div>
           </div>
         )}
         
         {activeTab === 'market' && <MarketExplorer />}
-
       </main>
     </div>
   );

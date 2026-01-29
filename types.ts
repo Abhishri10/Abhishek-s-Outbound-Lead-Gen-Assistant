@@ -1,3 +1,4 @@
+
 export interface OutreachStep {
   step: number;
   subject: string;
@@ -11,10 +12,13 @@ export interface SearchFormData {
   targetDepartments: { [key: string]: boolean };
   searchWeb: boolean;
   searchLinkedIn: boolean;
-  searchSocialMedia: boolean;
+  searchReddit: boolean;
+  searchFacebook: boolean;
+  searchX: boolean;
+  searchInstagram: boolean;
   generateEmail: boolean;
-  targetRegion: string; // The origin region of companies, e.g., 'INDIA'
-  targetRegions: { [key: string]: boolean }; // The destination regions for expansion
+  targetRegion: string;
+  targetRegions: { [key: string]: boolean };
   platforms: { [key: string]: boolean };
   targetStartups: boolean;
   salesTerritory: { [key: string]: boolean };
@@ -27,6 +31,8 @@ export interface Contact {
   designation: string;
   contactLinkedIn: string;
   talkingPoints?: string[];
+  verificationStatus?: 'unverified' | 'verifying' | 'verified' | 'failed';
+  verificationLog?: string;
 }
 
 export interface NewsArticle {
@@ -43,9 +49,7 @@ export interface Lead {
   phone: string;
   leadScore: number;
   outreachSuggestion: string;
-  employeeCount: string;
   latestFunding: string;
-  techStack: string[];
   competitors: string[];
   latestNews: NewsArticle;
   latestInternationalNews: NewsArticle;
@@ -54,4 +58,6 @@ export interface Lead {
   swotAnalysis?: string;
   contacts: Contact[];
   platformPresence: string[];
+  verificationStatus?: 'unverified' | 'verifying' | 'verified' | 'failed';
+  verificationReport?: string;
 }
