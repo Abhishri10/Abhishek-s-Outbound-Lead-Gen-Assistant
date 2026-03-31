@@ -115,7 +115,12 @@ const SearchForm: React.FC<SearchFormProps> = ({ formData, setFormData, onGenera
             ))}
             <div className="ml-auto pl-10 border-l-2 border-slate-100 flex items-center group cursor-pointer">
               <input id="generateEmail" name="generateEmail" type="checkbox" checked={formData.generateEmail} onChange={handleChange} className="h-6 w-6 text-indigo-600 rounded cursor-pointer" />
-              <label htmlFor="generateEmail" className="ml-4 text-[14px] font-black text-indigo-600 uppercase tracking-widest cursor-pointer group-hover:underline decoration-2 underline-offset-4">Build Outreach Sequence</label>
+              <label htmlFor="generateEmail" className="ml-4 text-[14px] font-black text-indigo-600 uppercase tracking-widest cursor-pointer group-hover:underline decoration-2 underline-offset-4 mr-8">Build Outreach Sequence</label>
+              
+              <div className="flex items-center group cursor-pointer">
+                <input id="appendResults" name="appendResults" type="checkbox" checked={formData.appendResults} onChange={handleChange} className="h-5 w-5 text-indigo-600 rounded cursor-pointer" />
+                <label htmlFor="appendResults" className="ml-3.5 text-[14px] font-bold text-slate-600 group-hover:text-indigo-600 transition-colors cursor-pointer">Append Results</label>
+              </div>
             </div>
           </div>
         </div>

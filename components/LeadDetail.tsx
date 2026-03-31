@@ -59,7 +59,7 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ lead, onGenerateCompetitorAnaly
                 <p className="text-sm font-bold text-white">{lead.latestFunding || 'No funding data'}</p>
             </div>
             <div className="flex flex-wrap gap-2">
-                {lead.competitors?.map(c => <span key={c} className="px-3 py-1.5 bg-white border border-slate-200 text-[11px] font-bold text-slate-600 rounded-lg shadow-sm">{c}</span>)}
+                {lead.competitors?.map((c, i) => <span key={`${c}-${i}`} className="px-3 py-1.5 bg-white border border-slate-200 text-[11px] font-bold text-slate-600 rounded-lg shadow-sm">{c}</span>)}
             </div>
           </DetailCard>
           

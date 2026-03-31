@@ -1,5 +1,5 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
 import { SearchFormData, Lead, Contact } from '../types';
 
 const buildPrompt = (formData: SearchFormData): string => {
@@ -66,6 +66,7 @@ export const generateLeadsPrompt = async (formData: SearchFormData): Promise<Lea
     const rawLeads = JSON.parse(jsonString);
     return rawLeads.map((lead: any) => ({
       ...lead,
+      id: crypto.randomUUID(),
       latestNews: lead.latestNews || { title: 'No news found', url: 'N/A' },
       latestInternationalNews: lead.latestInternationalNews || { title: 'No international news found', url: 'N/A' },
       verificationStatus: 'unverified'
@@ -78,12 +79,16 @@ export const generateLeadsPrompt = async (formData: SearchFormData): Promise<Lea
 
 export const verifyLeadDetails = async (lead: Lead): Promise<Partial<Lead>> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const model = "gemini-3-pro-preview";
+  const model = "gemini-3.1-pro-preview";
   const prompt = `Deep-verify ${lead.companyName}. Hunt for a better direct phone number than ${lead.phone}. Verify employment for: ${lead.contacts.map(c => c.contactName).join(', ')}. Return JSON.`;
   const response = await ai.models.generateContent({
     model,
     contents: prompt,
-    config: { responseMimeType: "application/json", tools: [{ googleSearch: {} }], thinkingConfig: { thinkingBudget: 24000 } },
+    config: { 
+      responseMimeType: "application/json", 
+      tools: [{ googleSearch: {} }], 
+      thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH } 
+    },
   });
   return JSON.parse(response.text);
 };
@@ -91,9 +96,12 @@ export const verifyLeadDetails = async (lead: Lead): Promise<Partial<Lead>> => {
 export const generateCompetitorAnalysis = async (lead: Lead): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const response = await ai.models.generateContent({
-    model: "gemini-3-pro-preview",
+    model: "gemini-3.1-pro-preview",
     contents: `Detailed battle card for ${lead.companyName} vs ${lead.competitors.join(', ')}.`,
-    config: { tools: [{ googleSearch: {} }], thinkingConfig: { thinkingBudget: 12000 } },
+    config: { 
+      tools: [{ googleSearch: {} }], 
+      thinkingConfig: { thinkingLevel: ThinkingLevel.LOW } 
+    },
   });
   return response.text;
 };
@@ -112,9 +120,12 @@ export const generateTalkingPoints = async (contact: Contact, companyName: strin
 export const generateMarketReport = async (industry: string, region: string): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const response = await ai.models.generateContent({
-    model: "gemini-3-pro-preview",
+    model: "gemini-3.1-pro-preview",
     contents: `Strategic expansion report for ${industry} in ${region}.`,
-    config: { tools: [{ googleSearch: {} }], thinkingConfig: { thinkingBudget: 24000 } },
+    config: { 
+      tools: [{ googleSearch: {} }], 
+      thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH } 
+    },
   });
   return response.text;
 };

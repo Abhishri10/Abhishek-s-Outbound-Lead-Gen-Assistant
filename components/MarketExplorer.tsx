@@ -89,7 +89,7 @@ const MarketExplorer: React.FC = () => {
               <div className="absolute inset-0 flex items-center justify-center text-3xl">🧠</div>
             </div>
             <h3 className="text-xl font-bold text-slate-800 mb-2">Engaging Deep Reasoning</h3>
-            <p className="text-slate-500">Gemini 3 Pro is synthesizing market signals, competitor data, and regulatory frameworks to build your report.</p>
+            <p className="text-slate-500">Gemini 3.1 Pro is synthesizing market signals, competitor data, and regulatory frameworks to build your report.</p>
           </div>
         </div>
       )}
@@ -109,7 +109,7 @@ const MarketExplorer: React.FC = () => {
              <MarkdownRenderer content={report} />
           </div>
           <div className="mt-12 pt-8 border-t border-slate-50 flex justify-between items-center text-slate-400 text-xs font-medium">
-            <span>Generated via Gemini 3 Pro with thinkingBudget: 24000</span>
+            <span>Generated via Gemini 3.1 Pro Intelligence Engine</span>
             <span>Ref: {new Date().toLocaleDateString()}</span>
           </div>
         </div>

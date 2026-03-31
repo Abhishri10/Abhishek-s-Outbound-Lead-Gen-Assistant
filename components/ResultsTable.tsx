@@ -41,23 +41,23 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
     return [...leads].sort((a, b) => b.leadScore - a.leadScore);
   }, [leads]);
 
-  const toggleRow = (companyName: string) => {
+  const toggleRow = (id: string) => {
     setExpandedRows(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(companyName)) {
-        newSet.delete(companyName);
+      if (newSet.has(id)) {
+        newSet.delete(id);
       } else {
-        newSet.add(companyName);
+        newSet.add(id);
       }
       return newSet;
     });
   };
 
-  const toggleSelect = (companyName: string) => {
+  const toggleSelect = (id: string) => {
     setSelectedLeads(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(companyName)) newSet.delete(companyName);
-      else newSet.add(companyName);
+      if (newSet.has(id)) newSet.delete(id);
+      else newSet.add(id);
       return newSet;
     });
   };
@@ -66,7 +66,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
     if (selectedLeads.size === leads.length) {
       setSelectedLeads(new Set());
     } else {
-      setSelectedLeads(new Set(leads.map(l => l.companyName)));
+      setSelectedLeads(new Set(leads.map(l => l.id)));
     }
   };
   
@@ -77,7 +77,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
   };
 
   const handleVerify = async () => {
-    const leadsToVerify = leads.filter(l => selectedLeads.has(l.companyName));
+    const leadsToVerify = leads.filter(l => selectedLeads.has(l.id));
     await onVerifyLeads(leadsToVerify);
     setSelectedLeads(new Set());
   };
@@ -157,13 +157,13 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
           </thead>
           <tbody className="bg-white divide-y divide-slate-200">
             {sortedLeads.map(lead => (
-              <React.Fragment key={lead.companyName}>
-                <tr className={`${selectedLeads.has(lead.companyName) ? 'bg-indigo-50/30' : ''} transition-colors`}>
+              <React.Fragment key={lead.id}>
+                <tr className={`${selectedLeads.has(lead.id) ? 'bg-indigo-50/30' : ''} transition-colors`}>
                   <td className="px-6 py-4">
                     <input 
                       type="checkbox" 
-                      checked={selectedLeads.has(lead.companyName)} 
-                      onChange={() => toggleSelect(lead.companyName)}
+                      checked={selectedLeads.has(lead.id)} 
+                      onChange={() => toggleSelect(lead.id)}
                       className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                     />
                   </td>
@@ -189,13 +189,13 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
                         <button onClick={() => findLookalikes(lead)} className="text-slate-500 hover:text-indigo-600 p-1 rounded hover:bg-white transition-all" title="Find Lookalikes">
                             <SparklesIcon />
                         </button>
-                        <button onClick={() => toggleRow(lead.companyName)} className={`transform transition-transform p-1 rounded hover:bg-white ${expandedRows.has(lead.companyName) ? 'rotate-180' : ''}`}>
+                        <button onClick={() => toggleRow(lead.id)} className={`transform transition-transform p-1 rounded hover:bg-white ${expandedRows.has(lead.id) ? 'rotate-180' : ''}`}>
                           <ChevronDownIcon />
                         </button>
                     </div>
                   </td>
                 </tr>
-                {expandedRows.has(lead.companyName) && (
+                {expandedRows.has(lead.id) && (
                   <tr>
                     <td colSpan={5} className="p-0">
                       <LeadDetail

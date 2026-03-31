@@ -24,6 +24,7 @@ export interface SearchFormData {
   salesTerritory: { [key: string]: boolean };
   excludedClients: string;
   agencyNames: string;
+  appendResults: boolean;
 }
 
 export interface Contact {
@@ -41,6 +42,7 @@ export interface NewsArticle {
 }
 
 export interface Lead {
+  id: string;
   companyName: string;
   category: string;
   companyLinkedIn: string;

@@ -59,4 +59,5 @@ export const DEFAULT_FORM_DATA: SearchFormData = {
   salesTerritory: initialSalesTerritory,
   excludedClients: '',
   agencyNames: '',
+  appendResults: false,
 };

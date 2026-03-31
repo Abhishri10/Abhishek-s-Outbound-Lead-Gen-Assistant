@@ -9,6 +9,7 @@ import { generateLeadsPrompt, generateCompetitorAnalysis, generateTalkingPoints,
 import { exportToCSV, exportToXLSX, copyToClipboard } from './utils/export';
 import { DocumentTextIcon } from './components/icons/DocumentTextIcon';
 import { BrainCircuitIcon } from './components/icons/BrainCircuitIcon';
+import { RefreshIcon } from './components/icons/RefreshIcon';
 
 const App: React.FC = () => {
   const [formData, setFormData] = useState<SearchFormData>(() => {
@@ -17,7 +18,18 @@ const App: React.FC = () => {
   });
   const [leads, setLeads] = useState<Lead[]>(() => {
     const savedLeads = localStorage.getItem('leadGenLeads');
-    return savedLeads ? JSON.parse(savedLeads) : [];
+    if (!savedLeads) return [];
+    try {
+      const parsedLeads = JSON.parse(savedLeads) as Lead[];
+      // Ensure every lead has a unique ID (for backward compatibility with old localStorage data)
+      return parsedLeads.map(lead => ({
+        ...lead,
+        id: lead.id || crypto.randomUUID()
+      }));
+    } catch (e) {
+      console.error('Failed to parse saved leads:', e);
+      return [];
+    }
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +48,11 @@ const App: React.FC = () => {
     setError(null);
     try {
       const newLeads = await generateLeadsPrompt(currentFormData);
-      setLeads(prevLeads => [...newLeads, ...prevLeads]);
+      if (currentFormData.appendResults) {
+        setLeads(prevLeads => [...newLeads, ...prevLeads]);
+      } else {
+        setLeads(newLeads);
+      }
     } catch (e) {
       console.error(e);
       setError(e instanceof Error ? e.message : 'An unknown error occurred.');
@@ -139,12 +155,29 @@ const App: React.FC = () => {
     }
   }, []);
 
+  const handleRefreshApp = useCallback(() => {
+    if (window.confirm('This will clear all leads and reset the form. Are you sure?')) {
+      localStorage.removeItem('leadGenFormData');
+      localStorage.removeItem('leadGenLeads');
+      window.location.reload();
+    }
+  }, []);
+
   const header = (
     <div className="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm border-b border-slate-200 px-6 py-4 mb-8">
       <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center">
-        <div>
-            <h1 className="text-2xl font-black text-slate-800 tracking-tight">Abhishek's Outbound Engine <span className="text-indigo-600">PRO</span></h1>
-            <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Automated International Expansion Intelligence</p>
+        <div className="flex items-center space-x-4">
+            <div>
+                <h1 className="text-2xl font-black text-slate-800 tracking-tight">Abhishek's Outbound Engine <span className="text-indigo-600">PRO</span></h1>
+                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Automated International Expansion Intelligence</p>
+            </div>
+            <button 
+                onClick={handleRefreshApp}
+                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
+                title="Reset Application"
+            >
+                <RefreshIcon className="w-5 h-5" />
+            </button>
         </div>
         
         <nav className="flex space-x-2 mt-4 md:mt-0 bg-slate-100 p-1.5 rounded-2xl">
